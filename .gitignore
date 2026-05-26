@@ -16,3 +16,4 @@ local.properties
 .idea/
 build/
 .gradle/
+app/google-services.json
