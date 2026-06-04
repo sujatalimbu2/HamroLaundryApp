@@ -1,6 +1,5 @@
 package com.example.hamrolaundryapp
 
-import android.content.Context
 import android.content.Intent
 import android.widget.Toast
 import android.os.Bundle
@@ -21,7 +20,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.core.content.edit
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Lock
@@ -54,22 +52,30 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.hamrolaundryapp.model.UserModel
+import com.example.hamrolaundryapp.repo.UserRepoImpl
 import com.example.hamrolaundryapp.ui.theme.Blue
 import com.example.hamrolaundryapp.ui.theme.DarkBlue
+import com.example.hamrolaundryapp.viewmodel.UserViewModel
 
 class RegistrationActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            RegistrationBody(onBack = { finish() })
+            val userViewModel = remember { UserViewModel(UserRepoImpl()) }
+            RegistrationBody(
+                userViewModel = userViewModel
+            )
         }
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun RegistrationBody(onBack: () -> Unit) {
+fun RegistrationBody(
+    userViewModel: UserViewModel
+) {
 
 //    var email : String = ""
 //    vs
@@ -82,6 +88,7 @@ fun RegistrationBody(onBack: () -> Unit) {
     var visibility by remember { mutableStateOf(false) }
 
     val context = LocalContext.current
+
 
 
     Column(
@@ -232,22 +239,48 @@ fun RegistrationBody(onBack: () -> Unit) {
         ) {
             ElevatedButton(
                 onClick = {
-                    val sharedPreferences = context.getSharedPreferences(
-                        "User",
-                        Context.MODE_PRIVATE
-                    )
-                    
-                    sharedPreferences.edit {
-                        putString("email", email)
-                        putString("password", password)
-                        putString("name", name)
-                        putString("address", address)
-                    }
 
-                    Toast.makeText(context, "Registration successful", Toast.LENGTH_LONG).show()
-                    val intent = Intent(context, Login::class.java)
-                    context.startActivity(intent)
-                    context.findActivity()?.finish()
+                    userViewModel.register(email,password){
+                        success,msg,userId->
+                        if(success){
+                            val model = UserModel(
+                                id = userId,
+                                name = name,
+                                email = email,
+                                address = address,
+                                contact = ""
+                            )
+                            userViewModel.addUser(userId, model){
+                                success,msg->
+                                if(success){
+                                    Toast.makeText(context, msg,
+                                        Toast.LENGTH_LONG).show()
+                                }else{
+                                    Toast.makeText(context, msg,
+                                        Toast.LENGTH_LONG).show()
+                                }
+                            }
+                        }else{
+                            Toast.makeText(context,msg,
+                                Toast.LENGTH_LONG).show()
+                        }
+                    }
+//                    val sharedPreferences = context.getSharedPreferences(
+//                        "User",
+//                        Context.MODE_PRIVATE
+//                    )
+//
+//                    sharedPreferences.edit {
+//                        putString("email", email)
+//                        putString("password", password)
+//                        putString("name", name)
+//                        putString("address", address)
+//                    }
+
+//                    Toast.makeText(context, "Registration successful", Toast.LENGTH_LONG).show()
+//                    val intent = Intent(context, Login::class.java)
+//                    context.startActivity(intent)
+//                    context.findActivity()?.finish()
                 },
                 modifier = Modifier
                     .fillMaxWidth()
@@ -282,9 +315,9 @@ fun RegistrationBody(onBack: () -> Unit) {
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Preview
+
+@Preview(showBackground = true)
 @Composable
 fun RegistrationPreview() {
-    RegistrationBody(onBack = {})
+    RegistrationBody(userViewModel = UserViewModel(UserRepoImpl()))
 }

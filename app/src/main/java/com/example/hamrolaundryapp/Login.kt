@@ -32,9 +32,11 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.edit
+import com.example.hamrolaundryapp.repo.UserRepoImpl
 import com.example.hamrolaundryapp.ui.theme.Blue
 import com.example.hamrolaundryapp.ui.theme.DarkBlue
 import com.example.hamrolaundryapp.ui.theme.HamrolaundryAppTheme
+import com.example.hamrolaundryapp.viewmodel.UserViewModel
 
 class Login : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -42,14 +44,15 @@ class Login : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             HamrolaundryAppTheme {
-                LoginScreen()
+                val userViewModel = remember { UserViewModel(UserRepoImpl()) }
+                LoginScreen(userViewModel = userViewModel)
             }
         }
     }
 }
 
 @Composable
-fun LoginScreen() {
+fun LoginScreen(userViewModel: UserViewModel) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
@@ -179,17 +182,29 @@ fun LoginScreen() {
             // Login Button
             Button(
                 onClick = { 
-                    val sharedPreferences = context.getSharedPreferences("User", Context.MODE_PRIVATE)
-                    val emailStorage = sharedPreferences.getString("email", "")
-                    val passwordStorage = sharedPreferences.getString("password", "")
-
-                    if (email.isNotEmpty() && password.isNotEmpty() && email == emailStorage && password == passwordStorage) {
-                        Toast.makeText(context, "Login success", Toast.LENGTH_LONG).show()
-                        sharedPreferences.edit { putBoolean("isLoggedIn", true) }
-                        context.startActivity(Intent(context, Dashboard::class.java))
-                        activity?.finish()
+                    if (email.isNotEmpty() && password.isNotEmpty()) {
+                        userViewModel.login(email, password) { success, message ->
+                            if (success) {
+                                Toast.makeText(context, "Login success", Toast.LENGTH_LONG).show()
+                                
+                                // Save session locally
+                                val sharedPreferences = context.getSharedPreferences("User", Context.MODE_PRIVATE)
+                                sharedPreferences.edit { 
+                                    putBoolean("isLoggedIn", true)
+                                    if (rememberMe) {
+                                        putString("email", email)
+                                        putString("password", password)
+                                    }
+                                }
+                                
+                                context.startActivity(Intent(context, Dashboard::class.java))
+                                activity?.finish()
+                            } else {
+                                Toast.makeText(context, "Login failed: $message", Toast.LENGTH_LONG).show()
+                            }
+                        }
                     } else {
-                        Toast.makeText(context, "Login failed", Toast.LENGTH_LONG).show()
+                        Toast.makeText(context, "Please fill all fields", Toast.LENGTH_SHORT).show()
                     }
                 },
                 modifier = Modifier
@@ -223,7 +238,7 @@ fun LoginScreen() {
 @Composable
 fun LoginScreenPreview() {
     HamrolaundryAppTheme {
-        LoginScreen()
+        LoginScreen(userViewModel = UserViewModel(UserRepoImpl()))
     }
 }
 

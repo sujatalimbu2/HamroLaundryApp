@@ -2,18 +2,21 @@ package com.example.hamrolaundryapp.repo
 
 import com.example.hamrolaundryapp.model.UserModel
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ValueEventListener
 
 // class
 
 class UserRepoImpl : UserRepo{
 
     // service we which
-    val auth = FirebaseAuth.getInstance()
+    val auth by lazy { FirebaseAuth.getInstance() }
     // database inter = repo  -fetch model
     // calling one string = user id return
-    val database = FirebaseDatabase.getInstance()
-    val ref = database.getReference("users")
+    val database by lazy { FirebaseDatabase.getInstance() }
+    val ref by lazy { database.getReference("users") }
     override fun login(
         email: String,
         password: String,
@@ -84,25 +87,26 @@ class UserRepoImpl : UserRepo{
         id: String,
         callback: (Boolean, String, UserModel?) -> Unit
     ) {
-//        ref.child(id).addValueEventListener(object : ValueEventListener {
-//            override fun onDataChange(snapshot: DataSnapshot) {
-//                if(snapshot.exists()){
-////                    val user = snapshot.getValue(UserModel::class.java){
-////                        if(user !=null){
-////                            callback(true,"user fetched", user)
-////                        }
-////                        user.let {
-////                            callback(true,"user fetched",it)
-////                        }
-//                    }
-//                }
-//                override fun onCancelled(error: DatabaseError) {
-//                    callback(false,"${error.message}",null)
-//                }
-//            }
-//
-//        })
-    }
+      ref.child(id).addValueEventListener(object : ValueEventListener {
+          override fun onDataChange(snapshot: DataSnapshot) {
+              if (snapshot.exists()) {
+                  val user = snapshot.getValue(UserModel::class.java)
+//                        if(user !=null){
+//                            callback(true,"user fetched", user)
+//                        }
+                      user.let {
+                          callback(true,"user fetched", it)
+                      }
+
+              }
+          }
+                override fun onCancelled(error: DatabaseError) {
+                    callback(false,error.message,null)
+                }
+            })
+
+        }
+
 
     override fun editProfile(
         id: String,

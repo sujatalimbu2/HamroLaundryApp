@@ -2,14 +2,14 @@ package com.example.hamrolaundryapp.viewmodel
 
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import com.example.c38.repo.UserRepo
+import com.example.hamrolaundryapp.repo.UserRepo
 import com.example.hamrolaundryapp.model.UserModel
 
 // inter with repo and not with database
 class UserViewModel(val repo : UserRepo): ViewModel() {
     // making loading whil
-    private val _loading = MutableLiveData<UserModel?>()
-    val loading : MutableLiveData<UserModel?> get() = _loading
+    private val _loading = MutableLiveData<Boolean>()
+    val loading : MutableLiveData<Boolean> get() = _loading
 
     private val _users = MutableLiveData<UserModel?>()
     val users : MutableLiveData<UserModel?> get() = _users
@@ -17,7 +17,7 @@ class UserViewModel(val repo : UserRepo): ViewModel() {
         email: String, password: String,
         callback: ( Boolean, String) -> Unit
     ){
-        repo.login(email,password)
+        repo.login(email,password, callback)
     }
 
     // authentication
@@ -70,6 +70,7 @@ class UserViewModel(val repo : UserRepo): ViewModel() {
     val allUsers : MutableLiveData<List<UserModel>?> get() = _allUsers
 
     fun getAllUser() {
+        _loading.value = true
         repo.getAllUser { success, message, data ->
             if(success){
                 _loading.value = false
@@ -84,7 +85,7 @@ class UserViewModel(val repo : UserRepo): ViewModel() {
     fun logout(
         callback: ( Boolean, String) -> Unit
     ){
-        repo.logout(callback);
+        repo.logout(callback)
     }
 
     fun deleteUser(
