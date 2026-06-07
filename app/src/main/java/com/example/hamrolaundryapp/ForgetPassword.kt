@@ -1,6 +1,7 @@
 package com.example.hamrolaundryapp
 
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -17,13 +18,16 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.hamrolaundryapp.repo.UserRepoImpl
 import com.example.hamrolaundryapp.ui.theme.HamrolaundryAppTheme
 import com.example.hamrolaundryapp.ui.theme.DarkBlue
+import com.example.hamrolaundryapp.viewmodel.UserViewModel
 
 class ForgetPassword : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -31,7 +35,11 @@ class ForgetPassword : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             HamrolaundryAppTheme {
-                ForgetPasswordScreen(onBack = { finish() })
+                val userViewModel = remember { UserViewModel(UserRepoImpl()) }
+                ForgetPasswordScreen(
+                    viewModel = userViewModel,
+                    onBack = { finish() }
+                )
             }
         }
     }
@@ -39,9 +47,10 @@ class ForgetPassword : ComponentActivity() {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ForgetPasswordScreen(onBack: () -> Unit) {
+fun ForgetPasswordScreen(viewModel: UserViewModel, onBack: () -> Unit) {
     var email by remember { mutableStateOf("") }
-    val primaryBlue = Color(0xFF007BFF) // Bright blue for button as seen in image
+    val context = LocalContext.current
+    val isLoading by viewModel.loading.collectAsState()
 
     Scaffold(
         containerColor = Color.White,
@@ -57,16 +66,11 @@ fun ForgetPasswordScreen(onBack: () -> Unit) {
                 },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.Transparent,
-                    scrolledContainerColor = Color.Unspecified,
-                    navigationIconContentColor = Color.Unspecified,
-                    titleContentColor = Color.Unspecified,
-                    actionIconContentColor = Color.Unspecified
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                    containerColor = Color.Transparent
                 )
             )
         }
@@ -78,27 +82,7 @@ fun ForgetPasswordScreen(onBack: () -> Unit) {
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
 
-            // Banner Area (Washing Machine Image placeholder)
-//            Box(
-//                modifier = Modifier
-//                    .fillMaxWidth()
-//                    .height(200.dp),
-////                    .background(
-////                        brush = Brush.verticalGradient(
-////                            colors = listOf(Color(0xFFE0F2FE), Color.White)
-////                        )
-////                    ),
-//                contentAlignment = Alignment.Center
-//            ) {
-//                // Since we don't have the image, using a text placeholder or icon
-////                Text(
-////                    text = "Illustration Placeholder",
-////                    color = Color.LightGray,
-////                    fontSize = 12.sp
-////                )
-//            }
-
-            Spacer(modifier = Modifier.height(100.dp))
+            Spacer(modifier = Modifier.height(60.dp))
 
             // Locked Mail Icon in Circle
             Box(
@@ -120,22 +104,22 @@ fun ForgetPasswordScreen(onBack: () -> Unit) {
             // Text content
             Text(
                 text = "Reset Your Password",
-                fontSize = 22.sp,
+                fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color(0xFF1D2939)
+                color = DarkBlue
             )
 
             Spacer(modifier = Modifier.height(12.dp))
 
             Text(
                 text = "Enter your registered email address and we'll send you a link to reset your password.",
-                fontSize = 14.sp,
+                fontSize = 15.sp,
                 color = Color.Gray,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.padding(horizontal = 40.dp)
             )
 
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(40.dp))
 
             // Email Input
             Column(
@@ -160,48 +144,45 @@ fun ForgetPasswordScreen(onBack: () -> Unit) {
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = primaryBlue,
+                        focusedBorderColor = DarkBlue,
                         unfocusedBorderColor = Color.Gray
                     ),
                     singleLine = true
                 )
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(32.dp))
 
             // Send Button
             Button(
-                onClick = { /* TODO: Send reset link logic */ },
+                onClick = {
+                    if (email.isNotEmpty()) {
+                        viewModel.forgetPassword(email) { success, msg ->
+                            Toast.makeText(context, msg, Toast.LENGTH_LONG).show()
+                            if (success) {
+                                onBack()
+                            }
+                        }
+                    } else {
+                        Toast.makeText(context, "Please enter your email", Toast.LENGTH_SHORT).show()
+                    }
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 24.dp)
                     .height(56.dp),
                 shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = DarkBlue)
+                colors = ButtonDefaults.buttonColors(containerColor = DarkBlue),
+                enabled = !isLoading
             ) {
-                Text("Send Reset Link", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                if (isLoading) {
+                    CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
+                } else {
+                    Text("Send Reset Link", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                }
             }
 
             Spacer(modifier = Modifier.height(32.dp))
-
-            // OR Divider
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 40.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                HorizontalDivider(modifier = Modifier.weight(1f), color = Color.LightGray)
-                Text(
-                    text = "OR",
-                    modifier = Modifier.padding(horizontal = 16.dp),
-                    fontSize = 12.sp,
-                    color = Color.Gray
-                )
-                HorizontalDivider(modifier = Modifier.weight(1f), color = Color.LightGray)
-            }
-
-            Spacer(modifier = Modifier.height(24.dp))
 
             // Back to Login
             TextButton(onClick = onBack) {
@@ -220,6 +201,9 @@ fun ForgetPasswordScreen(onBack: () -> Unit) {
 @Composable
 fun ForgetPasswordPreview() {
     HamrolaundryAppTheme {
-        ForgetPasswordScreen(onBack = {})
+        ForgetPasswordScreen(
+            viewModel = UserViewModel(UserRepoImpl()),
+            onBack = {}
+        )
     }
 }
