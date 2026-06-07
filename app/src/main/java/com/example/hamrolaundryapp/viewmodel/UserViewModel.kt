@@ -1,97 +1,95 @@
 package com.example.hamrolaundryapp.viewmodel
 
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.example.hamrolaundryapp.repo.UserRepo
 import com.example.hamrolaundryapp.model.UserModel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 
-// inter with repo and not with database
 class UserViewModel(val repo : UserRepo): ViewModel() {
-    // making loading whil
-    private val _loading = MutableLiveData<Boolean>()
-    val loading : MutableLiveData<Boolean> get() = _loading
+    private val _loading = MutableStateFlow(false)
+    val loading: StateFlow<Boolean> = _loading.asStateFlow()
 
-    private val _users = MutableLiveData<UserModel?>()
-    val users : MutableLiveData<UserModel?> get() = _users
-    fun login(
-        email: String, password: String,
-        callback: ( Boolean, String) -> Unit
-    ){
-        repo.login(email,password, callback)
-    }
+    private val _users = MutableStateFlow<UserModel?>(null)
+    val users: StateFlow<UserModel?> = _users.asStateFlow()
 
-    // authentication
-    fun register(
-        email: String, password: String,
-        callback: ( Boolean, String, String) -> Unit
-    ) {
-        repo.register(email, password, callback)
-    }
+    private val _allUsers = MutableStateFlow<List<UserModel>?>(null)
+    val allUsers: StateFlow<List<UserModel>?> = _allUsers.asStateFlow()
 
-    // realtime
-    fun addUser(
-        id: String, model: UserModel,
-        callback: ( Boolean, String) -> Unit
-    ){
-        repo.addUser(id, model, callback)
-    }
-
-    fun forgetPassword(
-        email: String,
-        callback: ( Boolean, String) -> Unit
-    ){
-        repo.forgetPassword(email, callback)
-    }
-
-    fun getUserById(
-        id: String
-    ){
+    fun login(email: String, password: String, callback: (Boolean, String) -> Unit) {
         _loading.value = true
-        repo.getUserById(id){
-            success,msg,data->
-            if(success){
+        repo.login(email, password) { success, msg ->
+            _loading.value = false
+            callback(success, msg)
+        }
+    }
+
+    fun register(email: String, password: String, callback: (Boolean, String, String) -> Unit) {
+        _loading.value = true
+        repo.register(email, password) { success, msg, userId ->
+            _loading.value = false
+            callback(success, msg, userId)
+        }
+    }
+
+    fun addUser(id: String, model: UserModel, callback: (Boolean, String) -> Unit) {
+        _loading.value = true
+        repo.addUser(id, model) { success, msg ->
+            _loading.value = false
+            callback(success, msg)
+        }
+    }
+
+    fun forgetPassword(email: String, callback: (Boolean, String) -> Unit) {
+        _loading.value = true
+        repo.forgetPassword(email) { success, msg ->
+            _loading.value = false
+            callback(success, msg)
+        }
+    }
+
+    fun getUserById(id: String) {
+        _loading.value = true
+        repo.getUserById(id) { success, msg, data ->
+            _loading.value = false
+            if (success) {
                 _users.value = data
-                _loading.value = false
-            }else {
+            } else {
                 _users.value = null
-                _loading.value =false
             }
         }
     }
 
-    fun editProfile(
-        id:String,model: UserModel,
-        callback: (Boolean, String) -> Unit
-    ){
-        repo.editProfile(id, model, callback)
+    fun editProfile(id: String, model: UserModel, callback: (Boolean, String) -> Unit) {
+        _loading.value = true
+        repo.editProfile(id, model) { success, msg ->
+            _loading.value = false
+            callback(success, msg)
+        }
     }
-
-    private val _allUsers = MutableLiveData<List<UserModel>?>()
-    val allUsers : MutableLiveData<List<UserModel>?> get() = _allUsers
 
     fun getAllUser() {
         _loading.value = true
         repo.getAllUser { success, message, data ->
-            if(success){
-                _loading.value = false
+            _loading.value = false
+            if (success) {
                 _allUsers.value = data
-            }else{
-                _loading.value = false
+            } else {
                 _allUsers.value = emptyList()
             }
         }
     }
 
-    fun logout(
-        callback: ( Boolean, String) -> Unit
-    ){
+    fun logout(callback: (Boolean, String) -> Unit) {
         repo.logout(callback)
     }
 
-    fun deleteUser(
-        id:String, callback:( Boolean, String) -> Unit
-    ){
-        repo.deleteUser(id,callback)
+    fun deleteUser(id: String, callback: (Boolean, String) -> Unit) {
+        _loading.value = true
+        repo.deleteUser(id) { success, msg ->
+            _loading.value = false
+            callback(success, msg)
+        }
     }
-
 }

@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">HamrolaundryApp</string>
+    <string name="title_activity_add_product">AddProduct</string>
 </resources>

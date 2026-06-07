@@ -42,9 +42,9 @@ class UserRepoImpl : UserRepo{
         auth.createUserWithEmailAndPassword(email,password)
             .addOnCompleteListener {
                 if (it.isSuccessful) {
-                    callback(true,"Login successful","${auth.currentUser?.uid}")
+                    callback(true, "Registration successful", "${auth.currentUser?.uid}")
 
-                }else{
+                } else {
                     callback(false,"${it.exception?.message}","")
                 }
 
@@ -115,10 +115,10 @@ class UserRepoImpl : UserRepo{
     ) {
         ref.child(id).updateChildren(model.toMap()).addOnCompleteListener {
             if (it.isSuccessful) {
-                callback(true,"Login successful")
+                callback(true, "Profile updated successfully")
 
-            }else{
-                callback(false,"${it.exception?.message}")
+            } else {
+                callback(false, "${it.exception?.message}")
             }
         }
 
