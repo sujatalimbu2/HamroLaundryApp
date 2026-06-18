@@ -1,4 +1,4 @@
-package com.example.hamrolaundryapp
+package com.example.hamrolaundryapp.view
 
 import android.app.Activity
 import android.content.Context
@@ -17,11 +17,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.hamrolaundryapp.R
 import com.example.hamrolaundryapp.ui.theme.DarkBlue
 import com.example.hamrolaundryapp.ui.theme.HamrolaundryAppTheme
 import kotlinx.coroutines.delay
@@ -43,7 +45,7 @@ fun SplashBody() {
     val context = LocalContext.current
     
     // Use LaunchedEffect only when NOT in preview to avoid navigation errors in preview
-    val isPreview = androidx.compose.ui.platform.LocalInspectionMode.current
+    val isPreview = LocalInspectionMode.current
     if (!isPreview) {
         LaunchedEffect(Unit) {
             delay(2000)

@@ -1,22 +1,21 @@
 package com.example.hamrolaundryapp.viewmodel
 
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.example.hamrolaundryapp.model.ProductModel
 import com.example.hamrolaundryapp.repo.ProductRepo
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 
 class ProductViewModel(val repo: ProductRepo) : ViewModel() {
 
-    private val _loading = MutableStateFlow(false)
-    val loading: StateFlow<Boolean> = _loading.asStateFlow()
+    private val _loading = MutableLiveData(false)
+    val loading: LiveData<Boolean> = _loading
 
-    private val _products = MutableStateFlow<ProductModel?>(null)
-    val product: StateFlow<ProductModel?> = _products.asStateFlow()
+    private val _products = MutableLiveData<ProductModel?>(null)
+    val product: LiveData<ProductModel?> = _products
 
-    private val _allProducts = MutableStateFlow<List<ProductModel>?>(null)
-    val allProducts: StateFlow<List<ProductModel>?> = _allProducts.asStateFlow()
+    private val _allProducts = MutableLiveData<List<ProductModel>?>(null)
+    val allProducts: LiveData<List<ProductModel>?> = _allProducts
 
     fun addProduct(product: ProductModel, callback: (Boolean, String) -> Unit) {
         _loading.value = true
@@ -44,11 +43,12 @@ class ProductViewModel(val repo: ProductRepo) : ViewModel() {
 
     fun getAllProduct() {
         _loading.value = true
-        repo.getAllProduct { success, message, data ->
-            _loading.value = false
+        repo.getAllProduct { success, message, product ->
             if (success) {
-                _allProducts.value = data
+                _allProducts.value = product
+                _loading.value = false
             } else {
+                _loading.value = false
                 _allProducts.value = emptyList()
             }
         }

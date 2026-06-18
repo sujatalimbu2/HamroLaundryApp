@@ -1,4 +1,4 @@
-package com.example.hamrolaundryapp
+package com.example.hamrolaundryapp.view
 
 import android.os.Bundle
 import android.widget.Toast
@@ -15,6 +15,7 @@ import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -50,7 +51,7 @@ class ForgetPassword : ComponentActivity() {
 fun ForgetPasswordScreen(viewModel: UserViewModel, onBack: () -> Unit) {
     var email by remember { mutableStateOf("") }
     val context = LocalContext.current
-    val isLoading by viewModel.loading.collectAsState()
+    val isLoading by viewModel.loading.observeAsState(initial = false)
 
     Scaffold(
         containerColor = Color.White,

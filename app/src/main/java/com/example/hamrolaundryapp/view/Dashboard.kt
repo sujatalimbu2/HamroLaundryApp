@@ -1,4 +1,4 @@
-package com.example.hamrolaundryapp
+package com.example.hamrolaundryapp.view
 
 import android.content.Intent
 import android.os.Bundle
@@ -15,6 +15,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.LocalLaundryService
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -45,8 +46,8 @@ class Dashboard : ComponentActivity() {
 @Composable
 fun DashboardScreen(viewModel: ProductViewModel) {
     val context = LocalContext.current
-    val products by viewModel.allProducts.collectAsState()
-    val isLoading by viewModel.loading.collectAsState()
+    val products by viewModel.allProducts.observeAsState()
+    val isLoading by viewModel.loading.observeAsState(initial = false)
 
     // Fetch products when screen opens
     LaunchedEffect(Unit) {

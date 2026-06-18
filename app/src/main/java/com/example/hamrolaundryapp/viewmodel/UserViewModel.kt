@@ -1,21 +1,20 @@
 package com.example.hamrolaundryapp.viewmodel
 
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.example.hamrolaundryapp.repo.UserRepo
 import com.example.hamrolaundryapp.model.UserModel
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 
 class UserViewModel(val repo : UserRepo): ViewModel() {
-    private val _loading = MutableStateFlow(false)
-    val loading: StateFlow<Boolean> = _loading.asStateFlow()
+    private val _loading = MutableLiveData(false)
+    val loading: LiveData<Boolean> = _loading
 
-    private val _users = MutableStateFlow<UserModel?>(null)
-    val users: StateFlow<UserModel?> = _users.asStateFlow()
+    private val _users = MutableLiveData<UserModel?>(null)
+    val users: LiveData<UserModel?> = _users
 
-    private val _allUsers = MutableStateFlow<List<UserModel>?>(null)
-    val allUsers: StateFlow<List<UserModel>?> = _allUsers.asStateFlow()
+    private val _allUsers = MutableLiveData<List<UserModel>?>(null)
+    val allUsers: LiveData<List<UserModel>?> = _allUsers
 
     fun login(email: String, password: String, callback: (Boolean, String) -> Unit) {
         _loading.value = true

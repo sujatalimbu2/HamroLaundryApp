@@ -1,4 +1,4 @@
-package com.example.hamrolaundryapp
+package com.example.hamrolaundryapp.view
 
 import android.os.Bundle
 import android.widget.Toast
@@ -17,9 +17,11 @@ import androidx.compose.material.icons.filled.AttachMoney
 import androidx.compose.material.icons.filled.ShoppingBag
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -55,7 +57,7 @@ fun AddProductScreen(viewModel: ProductViewModel) {
     var productPrice by remember { mutableStateOf("") }
     
     val context = LocalContext.current
-    val isLoading by viewModel.loading.collectAsState()
+    val isLoading by viewModel.loading.observeAsState(initial = false)
 
     Scaffold(
         topBar = {
@@ -179,7 +181,7 @@ fun ProductInputField(
     onValueChange: (String) -> Unit,
     label: String,
     placeholder: String,
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    icon: ImageVector,
     keyboardType: KeyboardType = KeyboardType.Text
 ) {
     OutlinedTextField(
