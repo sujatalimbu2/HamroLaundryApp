@@ -1,10 +1,6 @@
 package com.example.hamrolaundryapp.view
 
-import android.os.Bundle
 import android.widget.Toast
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -22,33 +18,17 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.hamrolaundryapp.repo.UserRepoImpl
-import com.example.hamrolaundryapp.ui.theme.HamrolaundryAppTheme
 import com.example.hamrolaundryapp.ui.theme.DarkBlue
 import com.example.hamrolaundryapp.viewmodel.UserViewModel
 
-class ForgetPassword : ComponentActivity() {
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
-        setContent {
-            HamrolaundryAppTheme {
-                val userViewModel = remember { UserViewModel(UserRepoImpl()) }
-                ForgetPasswordScreen(
-                    viewModel = userViewModel,
-                    onBack = { finish() }
-                )
-            }
-        }
-    }
-}
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ForgetPasswordScreen(viewModel: UserViewModel, onBack: () -> Unit) {
+fun ForgetPasswordScreen(
+    viewModel: UserViewModel,
+    onBack: () -> Unit
+) {
     var email by remember { mutableStateOf("") }
     val context = LocalContext.current
     val isLoading by viewModel.loading.observeAsState(initial = false)
@@ -57,58 +37,31 @@ fun ForgetPasswordScreen(viewModel: UserViewModel, onBack: () -> Unit) {
         containerColor = Color.White,
         topBar = {
             CenterAlignedTopAppBar(
-                title = {
-                    Text(
-                        "Forgot Password",
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color(0xFF1D2939)
-                    )
-                },
+                title = { Text("Forgot Password", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1D2939)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
-                },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = Color.Transparent
-                )
+                }
             )
         }
     ) { innerPadding ->
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding),
+            modifier = Modifier.fillMaxSize().padding(innerPadding),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-
             Spacer(modifier = Modifier.height(60.dp))
 
-            // Locked Mail Icon in Circle
             Box(
-                modifier = Modifier
-                    .size(100.dp)
-                    .background(Color(0xFFE0F2FE), CircleShape),
+                modifier = Modifier.size(100.dp).background(Color(0xFFE0F2FE), CircleShape),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(
-                    imageVector = Icons.Default.Lock,
-                    contentDescription = null,
-                    modifier = Modifier.size(40.dp),
-                    tint = DarkBlue
-                )
+                Icon(imageVector = Icons.Default.Lock, contentDescription = null, modifier = Modifier.size(40.dp), tint = DarkBlue)
             }
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Text content
-            Text(
-                text = "Reset Your Password",
-                fontSize = 24.sp,
-                fontWeight = FontWeight.Bold,
-                color = DarkBlue
-            )
+            Text(text = "Reset Your Password", fontSize = 24.sp, fontWeight = FontWeight.Bold, color = DarkBlue)
 
             Spacer(modifier = Modifier.height(12.dp))
 
@@ -122,39 +75,21 @@ fun ForgetPasswordScreen(viewModel: UserViewModel, onBack: () -> Unit) {
 
             Spacer(modifier = Modifier.height(40.dp))
 
-            // Email Input
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 24.dp)
-            ) {
-                Text(
-                    text = "Email Address",
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = Color(0xFF1D2939),
-                    modifier = Modifier.padding(bottom = 8.dp)
-                )
+            Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp)) {
+                Text(text = "Email Address", fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = Color(0xFF1D2939), modifier = Modifier.padding(bottom = 8.dp))
                 OutlinedTextField(
                     value = email,
                     onValueChange = { email = it },
                     placeholder = { Text("Enter your email address", color = Color.LightGray) },
-                    leadingIcon = {
-                        Icon(Icons.Default.Email, contentDescription = null, tint = DarkBlue)
-                    },
+                    leadingIcon = { Icon(Icons.Default.Email, contentDescription = null, tint = DarkBlue) },
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = DarkBlue,
-                        unfocusedBorderColor = Color.Gray
-                    ),
                     singleLine = true
                 )
             }
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            // Send Button
             Button(
                 onClick = {
                     if (email.isNotEmpty()) {
@@ -168,10 +103,7 @@ fun ForgetPasswordScreen(viewModel: UserViewModel, onBack: () -> Unit) {
                         Toast.makeText(context, "Please enter your email", Toast.LENGTH_SHORT).show()
                     }
                 },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 24.dp)
-                    .height(56.dp),
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp).height(56.dp),
                 shape = RoundedCornerShape(12.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = DarkBlue),
                 enabled = !isLoading
@@ -185,26 +117,9 @@ fun ForgetPasswordScreen(viewModel: UserViewModel, onBack: () -> Unit) {
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            // Back to Login
             TextButton(onClick = onBack) {
-                Text(
-                    text = "Back to Login",
-                    color = DarkBlue,
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.SemiBold
-                )
+                Text(text = "Back to Login", color = DarkBlue, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
             }
         }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun ForgetPasswordPreview() {
-    HamrolaundryAppTheme {
-        ForgetPasswordScreen(
-            viewModel = UserViewModel(UserRepoImpl()),
-            onBack = {}
-        )
     }
 }
