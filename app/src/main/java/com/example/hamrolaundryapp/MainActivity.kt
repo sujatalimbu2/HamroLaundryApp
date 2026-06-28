@@ -1,28 +1,22 @@
 package com.example.hamrolaundryapp
 
-import android.content.Context
-import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.hamrolaundryapp.ui.theme.DarkBlue
+import com.example.hamrolaundryapp.navigation.Screen
 import com.example.hamrolaundryapp.ui.theme.HamrolaundryAppTheme
-import com.example.hamrolaundryapp.view.Dashboard
-import com.example.hamrolaundryapp.view.Login
 import kotlinx.coroutines.delay
 
 class MainActivity : ComponentActivity() {
@@ -31,18 +25,16 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             HamrolaundryAppTheme {
-                SplashScreen {
-                    val sharedPreferences = getSharedPreferences("User", Context.MODE_PRIVATE)
-                    val isLoggedIn = sharedPreferences.getBoolean("isLoggedIn", false)
-                    
-                    val targetActivity = if (isLoggedIn) {
-                        Dashboard::class.java
-                    } else {
-                        Login::class.java
+                var showSplash by remember { mutableStateOf(true) }
+
+                if (showSplash) {
+                    SplashScreen {
+                        showSplash = false
                     }
-                    
-                    startActivity(Intent(this@MainActivity, targetActivity))
-                    finish()
+                } else {
+                    MainScreen(
+                        startDestination = Screen.Home.route
+                    )
                 }
             }
         }
@@ -56,24 +48,26 @@ fun SplashScreen(onTimeout: () -> Unit) {
         onTimeout()
     }
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(DarkBlue),
-        contentAlignment = Alignment.Center
+    Surface(
+        modifier = Modifier.fillMaxSize(),
+        color = MaterialTheme.colorScheme.primary
     ) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Image(
-                painter = painterResource(id = R.drawable.logo),
-                contentDescription = null,
-                modifier = Modifier.size(200.dp)
-            )
-            Spacer(modifier = Modifier.height(24.dp))
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
             Text(
                 text = "Hamro Laundry",
                 fontSize = 32.sp,
                 fontWeight = FontWeight.ExtraBold,
                 color = Color.White
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(
+                text = "Clean Clothes, Happy Life",
+                fontSize = 16.sp,
+                color = Color.White.copy(alpha = 0.8f)
             )
         }
     }

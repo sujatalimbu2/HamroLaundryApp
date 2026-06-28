@@ -7,29 +7,23 @@ import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 
-// class
+class UserRepoImpl : UserRepo {
 
-class UserRepoImpl : UserRepo{
-
-    // service we which
     val auth by lazy { FirebaseAuth.getInstance() }
-    // database inter = repo  -fetch model
-    // calling one string = user id return
     val database by lazy { FirebaseDatabase.getInstance() }
     val ref by lazy { database.getReference("users") }
+
     override fun login(
         email: String,
         password: String,
         callback: (Boolean, String) -> Unit
     ) {
-        auth.signInWithEmailAndPassword(email,password)
+        auth.signInWithEmailAndPassword(email, password)
             .addOnCompleteListener {
-                if (it.isSuccessful){
-                // kotlin ma return call back
-                    callback(true,"Login successful")
-
-                }else{
-                    callback(false,"${it.exception?.message}")
+                if (it.isSuccessful) {
+                    callback(true, "Login successful")
+                } else {
+                    callback(false, it.exception?.message ?: "Login failed")
                 }
             }
     }
@@ -39,34 +33,28 @@ class UserRepoImpl : UserRepo{
         password: String,
         callback: (Boolean, String, String) -> Unit
     ) {
-        auth.createUserWithEmailAndPassword(email,password)
+        auth.createUserWithEmailAndPassword(email, password)
             .addOnCompleteListener {
                 if (it.isSuccessful) {
-                    callback(true, "Registration successful", "${auth.currentUser?.uid}")
-
+                    callback(true, "Registration successful", auth.currentUser?.uid ?: "")
                 } else {
-                    callback(false,"${it.exception?.message}","")
+                    callback(false, it.exception?.message ?: "Registration failed", "")
                 }
-
             }
-
     }
-    //Create RUD
-    // to auto generate id
-    //val id = ref.push().key.toString()
+
     override fun addUser(
         id: String,
         model: UserModel,
         callback: (Boolean, String) -> Unit
     ) {
-       ref.child(id).setValue(model).addOnCompleteListener {
-           if (it.isSuccessful) {
-               callback(true,"User registered")
-           }else{
-               callback(false,"${it.exception?.message}")
-           }
-
-       }
+        ref.child(id).setValue(model).addOnCompleteListener {
+            if (it.isSuccessful) {
+                callback(true, "User registered")
+            } else {
+                callback(false, it.exception?.message ?: "Failed to save user")
+            }
+        }
     }
 
     override fun forgetPassword(
@@ -75,10 +63,9 @@ class UserRepoImpl : UserRepo{
     ) {
         auth.sendPasswordResetEmail(email).addOnCompleteListener {
             if (it.isSuccessful) {
-                callback(true,"Login Resent link sent to $email")
-
-            }else{
-                callback(false,"${it.exception?.message}")
+                callback(true, "Reset link sent to $email")
+            } else {
+                callback(false, it.exception?.message ?: "Failed to send reset link")
             }
         }
     }
@@ -87,26 +74,19 @@ class UserRepoImpl : UserRepo{
         id: String,
         callback: (Boolean, String, UserModel?) -> Unit
     ) {
-      ref.child(id).addValueEventListener(object : ValueEventListener {
-          override fun onDataChange(snapshot: DataSnapshot) {
-              if (snapshot.exists()) {
-                  val user = snapshot.getValue(UserModel::class.java)
-//                        if(user !=null){
-//                            callback(true,"user fetched", user)
-//                        }
-                      user.let {
-                          callback(true,"user fetched", it)
-                      }
-
-              }
-          }
-                override fun onCancelled(error: DatabaseError) {
-                    callback(false,error.message,null)
+        ref.child(id).addValueEventListener(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                if (snapshot.exists()) {
+                    val user = snapshot.getValue(UserModel::class.java)
+                    callback(true, "User fetched", user)
                 }
-            })
+            }
 
-        }
-
+            override fun onCancelled(error: DatabaseError) {
+                callback(false, error.message, null)
+            }
+        })
+    }
 
     override fun editProfile(
         id: String,
@@ -116,24 +96,22 @@ class UserRepoImpl : UserRepo{
         ref.child(id).updateChildren(model.toMap()).addOnCompleteListener {
             if (it.isSuccessful) {
                 callback(true, "Profile updated successfully")
-
             } else {
-                callback(false, "${it.exception?.message}")
+                callback(false, it.exception?.message ?: "Update failed")
             }
         }
-
     }
 
     override fun getAllUser(callback: (Boolean, String, List<UserModel>) -> Unit) {
-
+        // Implementation if needed
     }
 
     override fun logout(callback: (Boolean, String) -> Unit) {
         try {
             auth.signOut()
             callback(true, "Logout successful")
-        }catch (e: Exception){
-            callback(false, e.toString())
+        } catch (e: Exception) {
+            callback(false, e.localizedMessage ?: "Logout failed")
         }
     }
 
@@ -143,13 +121,10 @@ class UserRepoImpl : UserRepo{
     ) {
         ref.child(id).removeValue().addOnCompleteListener {
             if (it.isSuccessful) {
-                callback(true,"Account delete Successfully")
-
-            }else{
-                callback(false,"${it.exception?.message}")
+                callback(true, "Account deleted successfully")
+            } else {
+                callback(false, it.exception?.message ?: "Delete failed")
             }
         }
-
     }
-
 }

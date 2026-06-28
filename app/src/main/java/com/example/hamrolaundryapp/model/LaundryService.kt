@@ -1,0 +1,11 @@
+package com.example.hamrolaundryapp.model
+
+data class LaundryService(
+    val id: String = "",
+    val name: String = "",
+    val description: String = "",
+    val price: Double = 0.0,
+    val completionTime: String = "",
+    val imageUrl: String = "",
+    val category: String = ""
+)
