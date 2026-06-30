@@ -17,6 +17,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.tooling.preview.Preview
+import com.example.hamrolaundryapp.ui.theme.HamrolaundryAppTheme
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.hamrolaundryapp.model.LaundryService
 import com.example.hamrolaundryapp.utils.Resource
@@ -24,7 +26,6 @@ import com.example.hamrolaundryapp.viewmodel.BookingViewModel
 import java.text.SimpleDateFormat
 import java.util.*
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BookingScreen(
     serviceId: String,
@@ -33,34 +34,63 @@ fun BookingScreen(
     onLoginRequired: () -> Unit,
     viewModel: BookingViewModel = viewModel()
 ) {
-    val context = LocalContext.current
     val serviceResource by viewModel.service.collectAsState()
     val bookingResult by viewModel.bookingResult.collectAsState()
     val quantity by viewModel.quantity.collectAsState()
     val totalPrice by viewModel.totalPrice.collectAsState()
 
+    LaunchedEffect(serviceId) {
+        viewModel.getService(serviceId)
+    }
+
+    BookingScreenContent(
+        serviceResource = serviceResource,
+        bookingResult = bookingResult,
+        quantity = quantity,
+        totalPrice = totalPrice,
+        onBackClick = onBackClick,
+        onBookingSuccess = onBookingSuccess,
+        onLoginRequired = onLoginRequired,
+        onUpdateQuantity = { viewModel.updateQuantity(it) },
+        onBookNow = { clothingType, pickupDate, deliveryDate, address, instructions ->
+            viewModel.bookLaundry(clothingType, pickupDate, deliveryDate, address, instructions)
+        }
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun BookingScreenContent(
+    serviceResource: Resource<LaundryService>,
+    bookingResult: Resource<String>?,
+    quantity: Int,
+    totalPrice: Double,
+    onBackClick: () -> Unit,
+    onBookingSuccess: (String) -> Unit,
+    onLoginRequired: () -> Unit,
+    onUpdateQuantity: (Int) -> Unit,
+    onBookNow: (String, Date, Date, String, String) -> Unit
+) {
+    val context = LocalContext.current
+    
     var clothingType by remember { mutableStateOf("") }
     var address by remember { mutableStateOf("") }
     var instructions by remember { mutableStateOf("") }
     
     var pickupDate by remember { mutableStateOf(Date()) }
-    var deliveryDate by remember { mutableStateOf(Date(System.currentTimeMillis() + 86400000 * 2)) } // Default +2 days
+    var deliveryDate by remember { mutableStateOf(Date(System.currentTimeMillis() + 86400000 * 2)) }
 
     var showPickupPicker by remember { mutableStateOf(false) }
     var showDeliveryPicker by remember { mutableStateOf(false) }
 
     val dateFormatter = SimpleDateFormat("dd MMM, yyyy", Locale.getDefault())
 
-    LaunchedEffect(serviceId) {
-        viewModel.getService(serviceId)
-    }
-
     LaunchedEffect(bookingResult) {
         if (bookingResult is Resource.Success) {
-            val bookingId = (bookingResult as Resource.Success<String>).data ?: ""
+            val bookingId = bookingResult.data ?: ""
             onBookingSuccess(bookingId)
         } else if (bookingResult is Resource.Error) {
-            val msg = (bookingResult as Resource.Error).message
+            val msg = bookingResult.message
             if (msg == "Login Required") {
                 Toast.makeText(context, "Login first to book", Toast.LENGTH_SHORT).show()
                 onLoginRequired()
@@ -92,7 +122,7 @@ fun BookingScreen(
                     CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
                 }
                 is Resource.Success -> {
-                    val service = (serviceResource as Resource.Success<LaundryService>).data!!
+                    val service = serviceResource.data!!
                     
                     Column(
                         modifier = Modifier
@@ -100,7 +130,6 @@ fun BookingScreen(
                             .padding(16.dp)
                             .verticalScroll(rememberScrollState())
                     ) {
-                        // Service Info Summary
                         Card(
                             modifier = Modifier.fillMaxWidth(),
                             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
@@ -115,24 +144,22 @@ fun BookingScreen(
 
                         Spacer(modifier = Modifier.height(24.dp))
 
-                        // Quantity
                         Text("Quantity", fontWeight = FontWeight.Bold)
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier.padding(vertical = 8.dp)
                         ) {
-                            IconButton(onClick = { if (quantity > 1) viewModel.updateQuantity(quantity - 1) }) {
+                            IconButton(onClick = { if (quantity > 1) onUpdateQuantity(quantity - 1) }) {
                                 Icon(Icons.Default.Remove, contentDescription = "Decrease")
                             }
                             Text(quantity.toString(), fontSize = 18.sp, modifier = Modifier.padding(horizontal = 16.dp))
-                            IconButton(onClick = { viewModel.updateQuantity(quantity + 1) }) {
+                            IconButton(onClick = { onUpdateQuantity(quantity + 1) }) {
                                 Icon(Icons.Default.Add, contentDescription = "Increase")
                             }
                         }
 
                         Spacer(modifier = Modifier.height(16.dp))
 
-                        // Clothing Type
                         OutlinedTextField(
                             value = clothingType,
                             onValueChange = { clothingType = it },
@@ -143,7 +170,6 @@ fun BookingScreen(
 
                         Spacer(modifier = Modifier.height(16.dp))
 
-                        // Date Pickers
                         Row(modifier = Modifier.fillMaxWidth()) {
                             OutlinedCard(
                                 onClick = { showPickupPicker = true },
@@ -167,7 +193,6 @@ fun BookingScreen(
 
                         Spacer(modifier = Modifier.height(16.dp))
 
-                        // Address
                         OutlinedTextField(
                             value = address,
                             onValueChange = { address = it },
@@ -179,7 +204,6 @@ fun BookingScreen(
 
                         Spacer(modifier = Modifier.height(16.dp))
 
-                        // Instructions
                         OutlinedTextField(
                             value = instructions,
                             onValueChange = { instructions = it },
@@ -191,7 +215,6 @@ fun BookingScreen(
 
                         Spacer(modifier = Modifier.height(32.dp))
 
-                        // Total Price & Book Button
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween,
@@ -206,7 +229,7 @@ fun BookingScreen(
                                     if (clothingType.isBlank() || address.isBlank()) {
                                         Toast.makeText(context, "Please fill required fields", Toast.LENGTH_SHORT).show()
                                     } else {
-                                        viewModel.bookLaundry(clothingType, pickupDate, deliveryDate, address, instructions)
+                                        onBookNow(clothingType, pickupDate, deliveryDate, address, instructions)
                                     }
                                 },
                                 modifier = Modifier.height(56.dp),
@@ -224,7 +247,7 @@ fun BookingScreen(
                 }
                 is Resource.Error -> {
                     Text(
-                        text = (serviceResource as Resource.Error).message ?: "Error",
+                        text = serviceResource.message ?: "Error",
                         color = Color.Red,
                         modifier = Modifier.align(Alignment.Center)
                     )
@@ -279,5 +302,31 @@ fun MyDatePickerDialog(
         }
     ) {
         DatePicker(state = datePickerState)
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun BookingScreenPreview() {
+    val mockService = LaundryService(
+        id = "1",
+        name = "Premium Wash",
+        description = "Full wash and dry for all your delicate clothes with fabric softening.",
+        price = 120.0,
+        completionTime = "24 Hours"
+    )
+
+    HamrolaundryAppTheme {
+        BookingScreenContent(
+            serviceResource = Resource.Success(mockService),
+            bookingResult = null,
+            quantity = 2,
+            totalPrice = 240.0,
+            onBackClick = {},
+            onBookingSuccess = {},
+            onLoginRequired = {},
+            onUpdateQuantity = {},
+            onBookNow = { _, _, _, _, _ -> }
+        )
     }
 }

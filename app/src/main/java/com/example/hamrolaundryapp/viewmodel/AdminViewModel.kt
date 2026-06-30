@@ -33,6 +33,10 @@ class AdminViewModel(private val repository: AdminRepo = AdminRepo()) : ViewMode
 
     fun updateStatus(bookingId: String, newStatus: String) {
         viewModelScope.launch {
+            if (!repository.isAdmin()) {
+                _updateResult.value = Resource.Error("Access Denied: Only admins can update status")
+                return@launch
+            }
             _updateResult.value = Resource.Loading()
             val result = repository.updateBookingStatus(bookingId, newStatus)
             _updateResult.value = result
@@ -41,12 +45,17 @@ class AdminViewModel(private val repository: AdminRepo = AdminRepo()) : ViewMode
 
     fun deleteBooking(bookingId: String) {
         viewModelScope.launch {
+            if (!repository.isAdmin()) return@launch
             repository.deleteBooking(bookingId)
         }
     }
 
     fun saveService(service: LaundryService) {
         viewModelScope.launch {
+            if (!repository.isAdmin()) {
+                _updateResult.value = Resource.Error("Access Denied: Only admins can manage services")
+                return@launch
+            }
             _updateResult.value = Resource.Loading()
             val result = repository.addOrUpdateService(service)
             _updateResult.value = result
@@ -55,6 +64,7 @@ class AdminViewModel(private val repository: AdminRepo = AdminRepo()) : ViewMode
 
     fun deleteService(serviceId: String) {
         viewModelScope.launch {
+            if (!repository.isAdmin()) return@launch
             repository.deleteService(serviceId)
         }
     }
