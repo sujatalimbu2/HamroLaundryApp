@@ -24,16 +24,24 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.ui.tooling.preview.Preview
+import com.example.hamrolaundryapp.repo.UserRepoImpl
+import com.example.hamrolaundryapp.ui.theme.HamrolaundryAppTheme
 import com.example.hamrolaundryapp.model.UserModel
 import com.example.hamrolaundryapp.ui.theme.Blue
 import com.example.hamrolaundryapp.ui.theme.DarkBlue
+import com.example.hamrolaundryapp.utils.Constants
 import com.example.hamrolaundryapp.viewmodel.UserViewModel
-import com.google.firebase.firestore.FirebaseFirestore
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RegistrationScreen(
-    userViewModel: UserViewModel,
+    userViewModel: UserViewModel = viewModel(factory = object : androidx.lifecycle.ViewModelProvider.Factory {
+        override fun <T : androidx.lifecycle.ViewModel> create(modelClass: Class<T>): T {
+            return UserViewModel(UserRepoImpl()) as T
+        }
+    }),
     onRegisterSuccess: () -> Unit,
     onLoginClick: () -> Unit,
     onBackClick: () -> Unit
@@ -43,6 +51,8 @@ fun RegistrationScreen(
     var name by remember { mutableStateOf("") }
     var address by remember { mutableStateOf("") }
     var visibility by remember { mutableStateOf(false) }
+    var isAdminRegistration by remember { mutableStateOf(false) }
+    var adminKey by remember { mutableStateOf("") }
 
     val context = LocalContext.current
     val isLoading by userViewModel.loading.observeAsState(initial = false)
@@ -106,15 +116,53 @@ fun RegistrationScreen(
                 modifier = Modifier.fillMaxWidth()
             )
 
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Checkbox(
+                    checked = isAdminRegistration,
+                    onCheckedChange = { isAdminRegistration = it }
+                )
+                Text("Register as Admin", color = Color.Gray)
+            }
+
+            if (isAdminRegistration) {
+                Spacer(modifier = Modifier.height(16.dp))
+                OutlinedTextField(
+                    value = adminKey,
+                    onValueChange = { adminKey = it },
+                    label = { Text("Admin Secret Key") },
+                    leadingIcon = { Icon(Icons.Default.VpnKey, contentDescription = null, tint = DarkBlue) },
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier.fillMaxWidth(),
+                    visualTransformation = PasswordVisualTransformation()
+                )
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
 
             Button(
                 onClick = {
                     val trimmedEmail = email.trim()
                     if (trimmedEmail.isNotEmpty() && password.isNotEmpty() && name.isNotEmpty()) {
+                        if (isAdminRegistration && adminKey != Constants.ADMIN_SECRET_KEY) {
+                            Toast.makeText(context, "Invalid Admin Secret Key!", Toast.LENGTH_SHORT).show()
+                            return@Button
+                        }
+
                         userViewModel.register(trimmedEmail, password) { success, msg, userId ->
                             if (success) {
-                                val model = UserModel(id = userId, name = name, email = trimmedEmail, address = address, contact = "")
+                                val model = UserModel(
+                                    id = userId,
+                                    name = name,
+                                    email = trimmedEmail,
+                                    address = address,
+                                    contact = "",
+                                    role = if (isAdminRegistration) "admin" else "user"
+                                )
                                 userViewModel.addUser(userId, model) { addSuccess, addMsg ->
                                     if (addSuccess) {
                                         Toast.makeText(context, "Registration Successful", Toast.LENGTH_SHORT).show()
@@ -173,4 +221,16 @@ fun RegistrationInputField(value: String, onValueChange: (String) -> Unit, label
         leadingIcon = { Icon(icon, contentDescription = null, tint = DarkBlue) },
         singleLine = true
     )
+}
+
+@Preview(showBackground = true)
+@Composable
+fun RegistrationScreenPreview() {
+    HamrolaundryAppTheme {
+        RegistrationScreen(
+            onRegisterSuccess = {},
+            onLoginClick = {},
+            onBackClick = {}
+        )
+    }
 }

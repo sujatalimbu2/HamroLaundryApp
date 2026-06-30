@@ -1,5 +1,6 @@
 package com.example.hamrolaundryapp
 
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -29,6 +30,7 @@ fun MainScreen(startDestination: String = Screen.Home.route) {
     val userViewModel = remember { UserViewModel(UserRepoImpl()) }
     
     Scaffold(
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         bottomBar = {
             BottomNavigationBar(navController = navController)
         }

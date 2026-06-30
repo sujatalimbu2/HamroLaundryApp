@@ -22,13 +22,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.tooling.preview.Preview
+import com.example.hamrolaundryapp.ui.theme.HamrolaundryAppTheme
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.hamrolaundryapp.model.UserModel
-import com.example.hamrolaundryapp.utils.Constants
 import com.example.hamrolaundryapp.utils.Resource
 import com.example.hamrolaundryapp.viewmodel.ProfileViewModel
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileScreen(
     onLogout: () -> Unit,
@@ -36,11 +36,36 @@ fun ProfileScreen(
     onAdminPortalClick: () -> Unit,
     viewModel: ProfileViewModel = viewModel()
 ) {
-    val context = LocalContext.current
     val userResource by viewModel.userProfile.collectAsState()
     val updateResult by viewModel.updateResult.collectAsState()
-    
-    val isAdmin = (userResource as? Resource.Success)?.data?.email == Constants.ADMIN_EMAIL
+
+    ProfileScreenContent(
+        userResource = userResource,
+        updateResult = updateResult,
+        onLogout = {
+            viewModel.logout()
+            onLogout()
+        },
+        onLoginClick = onLoginClick,
+        onAdminPortalClick = onAdminPortalClick,
+        onUpdateProfile = { name, address, contact ->
+            viewModel.updateProfile(name, address, contact)
+        }
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ProfileScreenContent(
+    userResource: Resource<UserModel>,
+    updateResult: Resource<Unit>?,
+    onLogout: () -> Unit,
+    onLoginClick: () -> Unit,
+    onAdminPortalClick: () -> Unit,
+    onUpdateProfile: (String, String, String) -> Unit
+) {
+    val context = LocalContext.current
+    val isAdmin = (userResource as? Resource.Success)?.data?.role == "admin"
 
     var isEditMode by remember { mutableStateOf(false) }
     
@@ -52,7 +77,7 @@ fun ProfileScreen(
     // Sync form states when data is loaded
     LaunchedEffect(userResource) {
         if (userResource is Resource.Success) {
-            val user = (userResource as Resource.Success<UserModel>).data!!
+            val user = userResource.data!!
             name = user.name
             address = user.address
             contact = user.contact
@@ -65,7 +90,7 @@ fun ProfileScreen(
             isEditMode = false
             Toast.makeText(context, "Profile updated successfully", Toast.LENGTH_SHORT).show()
         } else if (updateResult is Resource.Error) {
-            Toast.makeText(context, (updateResult as Resource.Error).message, Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, updateResult.message, Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -112,7 +137,7 @@ fun ProfileScreen(
                             Text("Login to book services and track orders", color = Color.Gray, textAlign = TextAlign.Center)
                             Spacer(modifier = Modifier.height(32.dp))
                             Button(
-                                onClick = onLoginClick, // Use onLoginClick for Guest mode
+                                onClick = onLoginClick,
                                 modifier = Modifier.fillMaxWidth().height(56.dp),
                                 shape = RoundedCornerShape(12.dp)
                             ) {
@@ -157,7 +182,7 @@ fun ProfileScreen(
                                 Spacer(modifier = Modifier.height(32.dp))
                                 
                                 Button(
-                                    onClick = { viewModel.updateProfile(name, address, contact) },
+                                    onClick = { onUpdateProfile(name, address, contact) },
                                     modifier = Modifier.fillMaxWidth().height(56.dp),
                                     shape = RoundedCornerShape(12.dp),
                                     enabled = updateResult !is Resource.Loading
@@ -197,10 +222,7 @@ fun ProfileScreen(
                                 }
 
                                 OutlinedButton(
-                                    onClick = {
-                                        viewModel.logout()
-                                        onLogout()
-                                    },
+                                    onClick = onLogout,
                                     modifier = Modifier.fillMaxWidth().height(56.dp),
                                     shape = RoundedCornerShape(12.dp),
                                     colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.Red)
@@ -215,6 +237,30 @@ fun ProfileScreen(
                 }
             }
         }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun ProfileScreenPreview() {
+    HamrolaundryAppTheme {
+        ProfileScreenContent(
+            userResource = Resource.Success(
+                UserModel(
+                    id = "1",
+                    name = "John Doe",
+                    email = "john@example.com",
+                    address = "123 Street",
+                    contact = "1234567890",
+                    role = "user"
+                )
+            ),
+            updateResult = null,
+            onLogout = {},
+            onLoginClick = {},
+            onAdminPortalClick = {},
+            onUpdateProfile = { _, _, _ -> }
+        )
     }
 }
 

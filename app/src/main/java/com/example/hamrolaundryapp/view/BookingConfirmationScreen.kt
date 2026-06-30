@@ -20,6 +20,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.tooling.preview.Preview
+import com.example.hamrolaundryapp.ui.theme.HamrolaundryAppTheme
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.hamrolaundryapp.model.Booking
 import com.example.hamrolaundryapp.utils.Resource
@@ -171,5 +173,17 @@ fun DetailRow(label: String, value: String) {
     ) {
         Text(text = label, color = Color.Gray, fontSize = 14.sp)
         Text(text = value, fontWeight = FontWeight.Bold, fontSize = 14.sp, textAlign = TextAlign.End, modifier = Modifier.weight(1f))
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun BookingConfirmationScreenPreview() {
+    HamrolaundryAppTheme {
+        BookingConfirmationScreen(
+            bookingId = "123",
+            onHomeClick = {},
+            onTrackOrderClick = {}
+        )
     }
 }

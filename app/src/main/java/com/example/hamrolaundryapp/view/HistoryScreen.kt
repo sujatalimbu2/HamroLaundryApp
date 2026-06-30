@@ -18,6 +18,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.tooling.preview.Preview
+import com.example.hamrolaundryapp.ui.theme.HamrolaundryAppTheme
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.hamrolaundryapp.model.Booking
 import com.example.hamrolaundryapp.utils.Resource
@@ -33,6 +35,21 @@ fun HistoryScreen(
     viewModel: HistoryViewModel = viewModel()
 ) {
     val historyResource by viewModel.history.collectAsState()
+    
+    HistoryScreenContent(
+        historyResource = historyResource,
+        onBookingClick = onBookingClick,
+        onLoginClick = onLoginClick
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun HistoryScreenContent(
+    historyResource: Resource<List<Booking>>,
+    onBookingClick: (String) -> Unit,
+    onLoginClick: () -> Unit
+) {
     val dateFormatter = SimpleDateFormat("dd MMM, yyyy", Locale.getDefault())
 
     Scaffold(
@@ -50,7 +67,7 @@ fun HistoryScreen(
                     CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
                 }
                 is Resource.Success -> {
-                    val history = (historyResource as Resource.Success<List<Booking>>).data ?: emptyList()
+                    val history = historyResource.data ?: emptyList()
                     if (history.isEmpty()) {
                         EmptyHistoryState()
                     } else {
@@ -66,7 +83,7 @@ fun HistoryScreen(
                     }
                 }
                 is Resource.Error -> {
-                    val message = (historyResource as Resource.Error).message ?: "Error"
+                    val message = historyResource.message ?: "Error"
                     if (message == "Login required to view history") {
                         LoginPromptState(onLoginClick)
                     } else {
@@ -157,5 +174,34 @@ fun LoginPromptState(onLoginClick: () -> Unit) {
         Button(onClick = onLoginClick, modifier = Modifier.fillMaxWidth().height(56.dp), shape = RoundedCornerShape(12.dp)) {
             Text("Login Now")
         }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun HistoryScreenPreview() {
+    HamrolaundryAppTheme {
+        HistoryScreenContent(
+            historyResource = Resource.Success(
+                listOf(
+                    Booking(
+                        id = "1",
+                        serviceName = "Wash & Fold",
+                        totalPrice = 500.0,
+                        status = "Completed",
+                        createdAt = com.google.firebase.Timestamp.now()
+                    ),
+                    Booking(
+                        id = "2",
+                        serviceName = "Dry Cleaning",
+                        totalPrice = 1200.0,
+                        status = "Pending",
+                        createdAt = com.google.firebase.Timestamp.now()
+                    )
+                )
+            ),
+            onBookingClick = {},
+            onLoginClick = {}
+        )
     }
 }

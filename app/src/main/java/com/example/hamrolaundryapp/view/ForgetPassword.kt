@@ -20,13 +20,21 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.ui.tooling.preview.Preview
+import com.example.hamrolaundryapp.ui.theme.HamrolaundryAppTheme
+import com.example.hamrolaundryapp.repo.UserRepoImpl
 import com.example.hamrolaundryapp.ui.theme.DarkBlue
 import com.example.hamrolaundryapp.viewmodel.UserViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ForgetPasswordScreen(
-    viewModel: UserViewModel,
+    viewModel: UserViewModel = viewModel(factory = object : androidx.lifecycle.ViewModelProvider.Factory {
+        override fun <T : androidx.lifecycle.ViewModel> create(modelClass: Class<T>): T {
+            return UserViewModel(UserRepoImpl()) as T
+        }
+    }),
     onBack: () -> Unit
 ) {
     var email by remember { mutableStateOf("") }
@@ -121,5 +129,13 @@ fun ForgetPasswordScreen(
                 Text(text = "Back to Login", color = DarkBlue, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
             }
         }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun ForgetPasswordScreenPreview() {
+    HamrolaundryAppTheme {
+        ForgetPasswordScreen(onBack = {})
     }
 }
