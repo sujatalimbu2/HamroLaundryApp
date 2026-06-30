@@ -7,14 +7,26 @@ import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
+import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
 
 class AdminRepo(
-    private val database: FirebaseDatabase = FirebaseDatabase.getInstance()
+    private val database: FirebaseDatabase = FirebaseDatabase.getInstance(),
+    private val auth: FirebaseAuth = FirebaseAuth.getInstance()
 ) {
+    suspend fun isAdmin(): Boolean {
+        val uid = auth.currentUser?.uid ?: return false
+        return try {
+            val snapshot = database.getReference("users").child(uid).child("role").get().await()
+            snapshot.getValue(String::class.java) == "admin"
+        } catch (e: Exception) {
+            false
+        }
+    }
+
     fun getAllBookings(): Flow<Resource<List<Booking>>> = callbackFlow {
         trySend(Resource.Loading())
         val ref = database.getReference("bookings")

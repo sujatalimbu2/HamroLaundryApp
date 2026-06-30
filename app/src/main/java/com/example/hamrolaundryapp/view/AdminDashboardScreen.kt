@@ -21,6 +21,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.tooling.preview.Preview
+import com.example.hamrolaundryapp.ui.theme.HamrolaundryAppTheme
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.hamrolaundryapp.model.Booking
 import com.example.hamrolaundryapp.model.LaundryService
@@ -39,6 +41,7 @@ fun AdminDashboardScreen(
 ) {
     val bookingsResource by adminViewModel.allBookings.collectAsState()
     val servicesResource by serviceViewModel.services.collectAsState()
+    val updateResult by adminViewModel.updateResult.collectAsState()
     val context = LocalContext.current
     val dateFormatter = SimpleDateFormat("dd MMM, HH:mm", Locale.getDefault())
 
@@ -47,6 +50,13 @@ fun AdminDashboardScreen(
 
     var showStatusDialog by remember { mutableStateOf<Booking?>(null) }
     var showServiceDialog by remember { mutableStateOf<LaundryService?>(null) }
+
+    // Handle Admin Operations Result
+    LaunchedEffect(updateResult) {
+        if (updateResult is Resource.Error) {
+            Toast.makeText(context, (updateResult as Resource.Error).message, Toast.LENGTH_LONG).show()
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -283,4 +293,12 @@ fun StatusUpdateDialog(
             TextButton(onClick = onDismiss) { Text("Cancel") }
         }
     )
+}
+
+@Preview(showBackground = true)
+@Composable
+fun AdminDashboardScreenPreview() {
+    HamrolaundryAppTheme {
+        AdminDashboardScreen(onBackClick = {})
+    }
 }
